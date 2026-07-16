@@ -87,7 +87,7 @@ pnpm build:desktop
 # 含 NSIS / MSI
 ```
 
-GitHub Actions 工作流见 `.github/workflows/release.yml`。
+GitHub Actions 工作流模板见 `docs/ci/release.yml`（复制到 `.github/workflows/` 后启用；推送 workflow 需 PAT 带 `workflow` 权限）。
 
 ## 项目结构
 
