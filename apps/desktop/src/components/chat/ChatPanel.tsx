@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { Copy, FileInput, GitCompare, Send } from 'lucide-react';
 import clsx from 'clsx';
 import type { AgentMode } from '@openforge/core/browser';
@@ -6,15 +6,26 @@ import { messagesToApi } from '@openforge/core/browser';
 import { useChatStore } from '@/stores/chatStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useEditorStore } from '@/stores/editorStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useWorkspaceStore, type TreeNode } from '@/stores/workspaceStore';
 import { getModelRouter, resetModelRouter, getOrCreateSession, getSessionManager } from '@/adapters/core';
 import { t } from '@/i18n';
+
+function collectFilePaths(nodes: TreeNode[]): string[] {
+  const paths: string[] = [];
+  for (const n of nodes) {
+    if (!n.entry.isDirectory) paths.push(n.entry.path);
+    if (n.children) paths.push(...collectFilePaths(n.children));
+  }
+  return paths;
+}
 
 function CodeBlock({ lang, code }: { lang: string; code: string }) {
   const locale = useSettingsStore((s) => s.locale);
   const setDiffModal = useEditorStore((s) => s.setDiffModal);
   const updateContent = useEditorStore((s) => s.updateContent);
-  const activeTab = useEditorStore((s) => s.getActiveTab());
+  const activeTabId = useEditorStore((s) => s.activeTabId);
+  const tabs = useEditorStore((s) => s.tabs);
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   return (
     <div className="code-block">
@@ -113,7 +124,9 @@ export function ChatPanel() {
     setStreaming,
     clear,
   } = useChatStore();
-  const filePaths = useWorkspaceStore((s) => s.getAllFilePaths());
+  // Select stable tree reference; never call getters that allocate in the selector
+  const tree = useWorkspaceStore((s) => s.tree);
+  const filePaths = useMemo(() => collectFilePaths(tree), [tree]);
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;

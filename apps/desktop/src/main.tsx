@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from 'react';
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
@@ -17,10 +17,9 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 seedMemoryWorkspace();
 
+// Note: StrictMode double-mount races with xterm FitAddon; keep single mount for IDE shell.
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
-  </StrictMode>,
+  <ThemeProvider>
+    <App />
+  </ThemeProvider>,
 );

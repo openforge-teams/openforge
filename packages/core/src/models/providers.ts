@@ -19,10 +19,21 @@ export interface ResolvedProvider {
   };
 }
 
+function readEnv(): Record<string, string | undefined> {
+  try {
+    if (typeof process !== 'undefined' && process?.env) {
+      return process.env as Record<string, string | undefined>;
+    }
+  } catch {
+    // browsers may throw on process access
+  }
+  return {};
+}
+
 export function resolveProvider(
   id: ProviderId,
   config?: ProviderConfig,
-  env: NodeJS.ProcessEnv = typeof process !== 'undefined' ? process.env : {},
+  env: Record<string, string | undefined> = readEnv(),
 ): ResolvedProvider {
   const envKeyMap: Record<ProviderId, string | undefined> = {
     openai: env.OPENAI_API_KEY,

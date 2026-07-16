@@ -5,7 +5,9 @@ import { t } from '@/i18n';
 export function StatusBar() {
   const theme = useSettingsStore((s) => s.theme);
   const settingsLocale = useSettingsStore((s) => s.locale);
-  const tab = useEditorStore((s) => s.getActiveTab());
+  const activeTabId = useEditorStore((s) => s.activeTabId);
+  const tabs = useEditorStore((s) => s.tabs);
+  const tab = tabs.find((t) => t.id === activeTabId);
 
   return (
     <footer className="status-bar">

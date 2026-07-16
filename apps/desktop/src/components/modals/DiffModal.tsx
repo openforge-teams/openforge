@@ -9,7 +9,9 @@ export function DiffModal() {
   const setDiffModal = useEditorStore((s) => s.setDiffModal);
   const theme = useSettingsStore((s) => s.theme);
   const locale = useSettingsStore((s) => s.locale);
-  const activeTab = useEditorStore((s) => s.getActiveTab());
+  const activeTabId = useEditorStore((s) => s.activeTabId);
+  const tabs = useEditorStore((s) => s.tabs);
+  const activeTab = tabs.find((t) => t.id === activeTabId);
 
   if (!diffModal) return null;
 
