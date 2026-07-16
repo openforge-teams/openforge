@@ -4,6 +4,8 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
+  // Load monorepo-root .env for VITE_VOLCENGINE_* etc.
+  envDir: resolve(__dirname, '../..'),
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

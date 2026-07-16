@@ -1,7 +1,7 @@
 {
   "locale": "zh",
   "theme": "dark",
-  "defaultProvider": "openai",
+  "defaultProvider": "volcengine",
   "providers": {
     "openai": {
       "baseURL": "https://api.openai.com/v1",
@@ -22,9 +22,9 @@
     "volcengine": {
       "baseURL": "https://ark.cn-beijing.volces.com/api/v3",
       "models": {
-        "chat": "ep-xxxxxxxx",
-        "completion": "ep-xxxxxxxx",
-        "agent": "ep-xxxxxxxx"
+        "chat": "doubao-seed-2-0-lite-260428",
+        "completion": "doubao-seed-2-0-lite-260428",
+        "agent": "doubao-seed-2-0-lite-260428"
       }
     }
   }
