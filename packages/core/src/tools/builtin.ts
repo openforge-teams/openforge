@@ -341,8 +341,9 @@ export function createBuiltinTools(): ToolDefinition[] {
       execute: async (raw, ctx) => {
         const args = checkpointSchema.parse(raw);
         const mgr = new CheckpointManager(ctx.projectRoot);
-        const cp = await mgr.create(args.label, []);
-        return `Checkpoint created: ${cp.id} (${args.label})`;
+        const changes = ctx.getFileChanges?.() ?? [];
+        const cp = await mgr.create(args.label, changes);
+        return `Checkpoint created: ${cp.id} (${args.label}) — ${changes.length} file(s)`;
       },
     },
     {

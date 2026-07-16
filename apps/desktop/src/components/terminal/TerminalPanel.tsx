@@ -7,6 +7,7 @@ import 'xterm/css/xterm.css';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { t } from '@/i18n';
 import { isTauri, runCommand } from '@/host/tauri';
+import { getFS } from '@/host/fs';
 
 export function TerminalPanel() {
   const locale = useSettingsStore((s) => s.locale);
@@ -63,7 +64,9 @@ export function TerminalPanel() {
         if (cmd) {
           if (tauriMode) {
             try {
-              const output = await runCommand('/workspace', cmd);
+              const fs = await getFS();
+              const cwd = fs.getProjectRoot() ?? '/workspace';
+              const output = await runCommand(cwd, cmd);
               term.writeln(output);
             } catch (err) {
               term.writeln(`\x1b[31m${err instanceof Error ? err.message : 'Error'}\x1b[0m`);

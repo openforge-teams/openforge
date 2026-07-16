@@ -70,7 +70,7 @@ export async function startRepl(options: CliOptions): Promise<void> {
     }
 
     try {
-      const engine = createEngine(options, config, currentMode);
+      const engine = await createEngine(options, config, currentMode);
       engine.loadState({
         id: session.id,
         mode: currentMode,
@@ -84,13 +84,15 @@ export async function startRepl(options: CliOptions): Promise<void> {
 
       for await (const event of engine.run(input)) {
         printEvent(event);
-        if (event.type === 'message' && event.message) {
-          session = sessionManager.addMessage(session, event.message);
-        }
       }
 
       const state = engine.getState();
-      session = { ...session, messages: state.messages, mode: state.mode };
+      session = {
+        ...session,
+        messages: state.messages,
+        mode: state.mode,
+        updatedAt: Date.now(),
+      };
       await sessionManager.save(session);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -109,7 +111,7 @@ export async function runTask(
   task: string,
 ): Promise<void> {
   const config = await loadConfig(options.cwd);
-  const engine = createEngine(options, config, mode);
+  const engine = await createEngine(options, config, mode);
 
   for await (const event of engine.run(task)) {
     printEvent(event);

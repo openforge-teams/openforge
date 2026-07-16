@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ProviderId } from '@openforge/core/browser';
 import { X } from 'lucide-react';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -16,6 +16,12 @@ const PROVIDERS: ProviderId[] = ['openai', 'ollama', 'volcengine', 'custom'];
 export function SettingsModal({ open, onClose }: Props) {
   const store = useSettingsStore();
   const [draft, setDraft] = useState(store);
+
+  useEffect(() => {
+    if (open) {
+      setDraft(useSettingsStore.getState());
+    }
+  }, [open]);
 
   if (!open) return null;
 

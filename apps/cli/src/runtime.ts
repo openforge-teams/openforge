@@ -4,6 +4,7 @@ import {
   CodeIndexer,
   ConfigStore,
   ModelRouter,
+  connectMcpServers,
   type AgentMode,
   type OpenForgeConfig,
   type ProviderConfig,
@@ -56,13 +57,19 @@ export function buildRouter(
   });
 }
 
-export function createEngine(
+export async function createEngine(
   options: CliOptions,
   config: OpenForgeConfig,
   mode: AgentMode,
-): AgentEngine {
+): Promise<AgentEngine> {
   const projectRoot = resolve(options.cwd);
   const router = buildRouter(config, options);
+
+  try {
+    await connectMcpServers(projectRoot);
+  } catch {
+    // MCP is optional
+  }
 
   return new AgentEngine({
     projectRoot,
@@ -70,7 +77,7 @@ export function createEngine(
     mode,
     approvalQueue: new CliApprovalQueue({
       autoApproveSafe: config.permissions?.autoApproveSafe ?? true,
-      autoApproveLow: false,
+      autoApproveLow: config.permissions?.autoApproveLow ?? false,
     }),
   });
 }

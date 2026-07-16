@@ -4,7 +4,17 @@ import { providerHeaders, type ResolvedProvider } from './providers.js';
 
 export interface ChatCompletionRequest {
   model: string;
-  messages: Array<{ role: string; content: string; name?: string; tool_call_id?: string }>;
+  messages: Array<{
+    role: string;
+    content: string | null;
+    name?: string;
+    tool_call_id?: string;
+    tool_calls?: Array<{
+      id: string;
+      type: 'function';
+      function: { name: string; arguments: string };
+    }>;
+  }>;
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
@@ -210,10 +220,25 @@ export class ModelClient {
 }
 
 export function messagesToApi(messages: Message[]): ChatCompletionRequest['messages'] {
-  return messages.map((m) => ({
-    role: m.role,
-    content: m.content,
-    ...(m.name ? { name: m.name } : {}),
-    ...(m.toolCallId ? { tool_call_id: m.toolCallId } : {}),
-  }));
+  return messages.map((m) => {
+    const base: ChatCompletionRequest['messages'][number] = {
+      role: m.role,
+      content: m.content,
+    };
+    if (m.name) base.name = m.name;
+    if (m.toolCallId) base.tool_call_id = m.toolCallId;
+    if (m.toolCalls?.length) {
+      base.tool_calls = m.toolCalls.map((tc) => ({
+        id: tc.id,
+        type: 'function' as const,
+        function: {
+          name: tc.name,
+          arguments: JSON.stringify(tc.arguments ?? {}),
+        },
+      }));
+      // OpenAI-compatible APIs allow null content when tool_calls are present
+      if (!m.content) base.content = null;
+    }
+    return base;
+  });
 }

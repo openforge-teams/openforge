@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import type { AgentMode, OpenForgeConfig, ProviderConfig, ProviderId } from '@openforge/core';
+import { VscodeApprovalQueue } from './approval.js';
 
 let coreModule: typeof import('@openforge/core') | null = null;
 
@@ -67,10 +68,16 @@ export async function runAgentTask(
   mode: AgentMode,
   onEvent?: (line: string) => void,
 ): Promise<string> {
-  const { AgentEngine, ApprovalQueue } = await getCore();
+  const { AgentEngine, connectMcpServers } = await getCore();
   const projectRoot = getWorkspaceRoot();
   const config = await loadMergedConfig(projectRoot);
   const router = await createRouter(projectRoot);
+
+  try {
+    await connectMcpServers(projectRoot);
+  } catch {
+    // MCP optional
+  }
 
   const summaries: string[] = [];
 
@@ -78,7 +85,7 @@ export async function runAgentTask(
     projectRoot,
     router,
     mode,
-    approvalQueue: new ApprovalQueue({
+    approvalQueue: new VscodeApprovalQueue({
       autoApproveSafe: config.permissions?.autoApproveSafe ?? true,
       autoApproveLow: config.permissions?.autoApproveLow ?? false,
     }),

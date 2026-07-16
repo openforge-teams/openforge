@@ -103,6 +103,9 @@ export function AgentPanel() {
                     <button className="btn btn-primary" style={{ fontSize: 10, padding: '2px 6px' }} onClick={() => resolve(req.id, 'once')}>
                       {t(locale, 'approval.once')}
                     </button>
+                    <button className="btn btn-ghost" style={{ fontSize: 10, padding: '2px 6px' }} onClick={() => resolve(req.id, 'always')}>
+                      {t(locale, 'approval.always')}
+                    </button>
                     <button className="btn btn-ghost" style={{ fontSize: 10, padding: '2px 6px' }} onClick={() => resolve(req.id, 'deny')}>
                       {t(locale, 'approval.deny')}
                     </button>

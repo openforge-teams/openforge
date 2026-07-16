@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { assembleContext } from '../context/assemble.js';
+import { assembleContext, parseRefs } from '../context/assemble.js';
+import { CodeIndexer } from '../context/indexer.js';
 import { messagesToApi } from '../models/client.js';
 import type { ModelRouter } from '../models/router.js';
 import { ApprovalQueue } from '../security/approvals.js';
@@ -43,6 +44,20 @@ export interface AgentEngineOptions {
   role?: RolePreset;
   approvalQueue?: ApprovalQueue;
   onFileChange?: (change: FileChange) => void;
+  /** When true (default), inject RAG hits from the project index on first turn. */
+  enableRag?: boolean;
+}
+
+function parseToolArguments(raw: string | undefined): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(raw || '{}') as unknown;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+    return { value: parsed };
+  } catch {
+    return { _raw: raw ?? '', _parseError: true };
+  }
 }
 
 export interface SubAgentResult {
@@ -64,7 +79,7 @@ export class AgentEngine {
     this.registry = options.registry ?? globalToolRegistry;
     this.approvalQueue = options.approvalQueue ?? new ApprovalQueue({
       autoApproveSafe: true,
-      autoApproveLow: true,
+      autoApproveLow: false,
     });
   }
 
@@ -96,14 +111,62 @@ export class AgentEngine {
     const runSignal = this.abortController.signal;
 
     try {
-      const contextMessages = await assembleContext({
-        projectRoot: this.options.projectRoot,
-        userMessage,
-        systemPrefix: systemPromptForRole(this.options.role ?? 'default', this.state.mode),
-      });
+      const isFirstTurn = this.state.messages.length === 0;
+      if (isFirstTurn) {
+        let chunks = undefined;
+        if (this.options.enableRag !== false) {
+          try {
+            const indexer = new CodeIndexer({ projectRoot: this.options.projectRoot });
+            await indexer.initialize();
+            const existing = indexer.getChunks();
+            if (existing.length === 0) {
+              await indexer.indexAll();
+            }
+            chunks = indexer.getChunks();
+          } catch {
+            // Indexing is best-effort; agent can still use search_code tool
+          }
+        }
 
-      for (const msg of contextMessages) {
-        this.state = addMessage(this.state, msg);
+        const { refs, cleanText } = parseRefs(userMessage);
+        const contextMessages = await assembleContext({
+          projectRoot: this.options.projectRoot,
+          userMessage: cleanText || userMessage,
+          refs,
+          chunks,
+          systemPrefix: systemPromptForRole(this.options.role ?? 'default', this.state.mode),
+        });
+
+        for (const msg of contextMessages) {
+          this.state = addMessage(this.state, msg);
+        }
+      } else {
+        const { refs, cleanText } = parseRefs(userMessage);
+        let content = cleanText || userMessage;
+        if (refs.length > 0) {
+          const extra = await assembleContext({
+            projectRoot: this.options.projectRoot,
+            userMessage: content,
+            refs,
+          });
+          // Prefer assembled user message (with resolved refs in system); keep one user msg
+          const userMsg = extra.find((m) => m.role === 'user');
+          const systemExtra = extra.find((m) => m.role === 'system');
+          if (systemExtra) {
+            this.state = addMessage(this.state, {
+              ...systemExtra,
+              id: uuidv4(),
+              content: `Additional context for this turn:\n\n${systemExtra.content}`,
+            });
+          }
+          content = userMsg?.content ?? content;
+        }
+        this.state = addMessage(this.state, {
+          id: uuidv4(),
+          role: 'user',
+          content,
+          createdAt: Date.now(),
+        });
       }
 
       yield { type: 'step', step: 'plan' };
@@ -161,7 +224,7 @@ export class AgentEngine {
           toolCalls: rawToolCalls.map((tc) => ({
             id: tc.id,
             name: tc.function.name,
-            arguments: JSON.parse(tc.function.arguments || '{}') as Record<string, unknown>,
+            arguments: parseToolArguments(tc.function.arguments),
           })),
           createdAt: Date.now(),
         };
@@ -244,13 +307,13 @@ export class AgentEngine {
         this.fileChanges.push(change);
         this.options.onFileChange?.(change);
       },
+      getFileChanges: () => [...this.fileChanges],
       requestApproval: async (req) => {
         const approved = await this.approvalQueue.request(
           req.toolName,
           req.arguments,
           req.risk,
           req.reason,
-          async () => 'once',
         );
         return approved ? 'once' : 'deny';
       },
@@ -299,6 +362,7 @@ export class AgentEngine {
       registry: subRegistry,
       mode: 'agent',
       role: this.options.role,
+      approvalQueue: this.approvalQueue,
     });
 
     this.childEngines.push(subEngine);

@@ -92,22 +92,21 @@ export class McpClient {
     return text ?? JSON.stringify(result);
   }
 
-  registerTools(registry = globalToolRegistry): void {
-    void this.listTools().then((tools) => {
-      for (const tool of tools) {
-        const def: ToolDefinition = {
-          name: tool.name,
-          description: tool.description ?? `MCP tool ${tool.name}`,
-          parameters: tool.inputSchema ?? { type: 'object', properties: {} },
-          risk: 'low',
-          execute: async (arguments_, ctx) => {
-            if (ctx.signal?.aborted) throw new Error('Aborted');
-            return this.callTool(tool.name, arguments_);
-          },
-        };
-        registry.registerMcp(def, this.name);
-      }
-    });
+  async registerTools(registry = globalToolRegistry): Promise<void> {
+    const tools = await this.listTools();
+    for (const tool of tools) {
+      const def: ToolDefinition = {
+        name: tool.name,
+        description: tool.description ?? `MCP tool ${tool.name}`,
+        parameters: tool.inputSchema ?? { type: 'object', properties: {} },
+        risk: 'low',
+        execute: async (arguments_, ctx) => {
+          if (ctx.signal?.aborted) throw new Error('Aborted');
+          return this.callTool(tool.name, arguments_);
+        },
+      };
+      registry.registerMcp(def, this.name);
+    }
   }
 
   close(): void {
@@ -188,7 +187,7 @@ export async function connectMcpServers(
     const client = new McpClient(name, serverConfig);
     try {
       await client.connect();
-      client.registerTools(registry);
+      await client.registerTools(registry);
       clients.push(client);
     } catch (err) {
       console.error(`Failed to connect MCP server "${name}":`, err);

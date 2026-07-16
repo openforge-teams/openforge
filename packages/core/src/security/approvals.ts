@@ -6,16 +6,22 @@ export interface ApprovalPolicy {
   autoApproveLow?: boolean;
   alwaysAllowed?: Set<string>;
   alwaysDenied?: Set<string>;
+  /** Host-provided prompt used when decide is not passed per-call. */
+  prompt?: (req: ApprovalRequest) => Promise<ApprovalDecision>;
 }
 
 export class ApprovalQueue {
   private readonly queue: ApprovalRequest[] = [];
   private readonly alwaysAllowed = new Set<string>();
   private readonly alwaysDenied = new Set<string>();
-  private readonly policy: ApprovalPolicy;
+  protected readonly policy: ApprovalPolicy;
 
   constructor(policy: ApprovalPolicy = {}) {
-    this.policy = policy;
+    this.policy = {
+      autoApproveSafe: policy.autoApproveSafe ?? true,
+      autoApproveLow: policy.autoApproveLow ?? false,
+      ...policy,
+    };
     if (policy.alwaysAllowed) {
       for (const name of policy.alwaysAllowed) this.alwaysAllowed.add(name);
     }
@@ -34,7 +40,7 @@ export class ApprovalQueue {
     if (this.alwaysDenied.has(toolName)) return false;
     if (this.alwaysAllowed.has(toolName)) return true;
 
-    if (risk === 'safe' && this.policy.autoApproveSafe) return true;
+    if (risk === 'safe' && this.policy.autoApproveSafe !== false) return true;
     if (risk === 'low' && this.policy.autoApproveLow) return true;
     if (risk === 'safe') return true;
 
@@ -49,18 +55,27 @@ export class ApprovalQueue {
 
     this.queue.push(req);
 
-    if (!decide) return false;
+    const prompt = decide ?? this.policy.prompt;
+    if (!prompt) {
+      this.dequeue(req.id);
+      // Deny by default when no interactive prompt is available
+      return false;
+    }
 
-    const decision = await decide(req);
-    switch (decision) {
-      case 'always':
-        this.alwaysAllowed.add(toolName);
-        return true;
-      case 'once':
-        return true;
-      case 'deny':
-      default:
-        return false;
+    try {
+      const decision = await prompt(req);
+      switch (decision) {
+        case 'always':
+          this.alwaysAllowed.add(toolName);
+          return true;
+        case 'once':
+          return true;
+        case 'deny':
+        default:
+          return false;
+      }
+    } finally {
+      this.dequeue(req.id);
     }
   }
 
@@ -70,5 +85,10 @@ export class ApprovalQueue {
 
   clear(): void {
     this.queue.length = 0;
+  }
+
+  private dequeue(id: string): void {
+    const idx = this.queue.findIndex((r) => r.id === id);
+    if (idx >= 0) this.queue.splice(idx, 1);
   }
 }

@@ -178,6 +178,8 @@ export interface ToolContext {
   signal?: AbortSignal;
   onFileChange?: (change: FileChange) => void;
   requestApproval?: (req: Omit<ApprovalRequest, 'id' | 'createdAt'>) => Promise<ApprovalDecision>;
+  /** Recent file changes in the current agent run (for checkpoints). */
+  getFileChanges?: () => FileChange[];
 }
 
 export interface McpServerConfig {

@@ -32,19 +32,16 @@ export async function promptApproval(req: ApprovalRequest): Promise<ApprovalDeci
 }
 
 export class CliApprovalQueue extends ApprovalQueue {
-  override async request(
-    toolName: string,
-    args: Record<string, unknown>,
-    risk: 'safe' | 'low' | 'high',
-    reason?: string,
-    _decide?: (req: ApprovalRequest) => Promise<ApprovalDecision>,
-  ): Promise<boolean> {
-    const decide = async (req: ApprovalRequest): Promise<ApprovalDecision> => {
-      if (req.risk === 'high' || req.risk === 'low') {
-        return promptApproval(req);
-      }
-      return 'once';
-    };
-    return super.request(toolName, args, risk, reason, decide);
+  constructor(policy: ConstructorParameters<typeof ApprovalQueue>[0] = {}) {
+    super({
+      ...policy,
+      prompt: async (req) => {
+        // Only interactive-prompt high-risk tools; low/safe follow policy defaults
+        if (req.risk === 'high') {
+          return promptApproval(req);
+        }
+        return 'once';
+      },
+    });
   }
 }
