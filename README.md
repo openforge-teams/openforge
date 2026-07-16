@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>本地优先的开源 AI 编程助手</strong><br />
-  融合 Cursor 式 IDE 体验与 Claude Code 式自主 Agent<br />
+  现代 IDE 体验与自主 Agent 能力合而为一<br />
   Desktop · CLI · VS Code — 一套引擎，三端齐发
 </p>
 
