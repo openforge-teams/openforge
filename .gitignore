@@ -27,3 +27,9 @@ openforge-data
 *.db-journal
 .aider*
 .cache
+
+# Local AI runtime data (keep config/rules/mcp tracked)
+.ai/index.json
+.ai/sessions/
+.ai/checkpoints/
+.ai/audit.log
