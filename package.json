@@ -1,0 +1,22 @@
+{
+  "name": "openforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source AI coding assistant — Cursor + Claude Code style IDE, CLI, and extensions",
+  "license": "MIT",
+  "scripts": {
+    "dev": "pnpm --filter @openforge/desktop dev",
+    "dev:desktop": "pnpm --filter @openforge/desktop tauri:dev",
+    "dev:web": "pnpm --filter @openforge/desktop dev",
+    "build": "pnpm -r build",
+    "build:desktop": "pnpm --filter @openforge/desktop tauri:build",
+    "build:windows": "pnpm --filter @openforge/desktop tauri:build -- --target x86_64-pc-windows-msvc",
+    "cli": "pnpm --filter @openforge/cli start",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

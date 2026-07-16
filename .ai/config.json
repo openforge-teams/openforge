@@ -1,0 +1,31 @@
+{
+  "locale": "zh",
+  "theme": "dark",
+  "defaultProvider": "openai",
+  "providers": {
+    "openai": {
+      "baseURL": "https://api.openai.com/v1",
+      "models": {
+        "chat": "gpt-4o-mini",
+        "completion": "gpt-4o-mini",
+        "agent": "gpt-4o"
+      }
+    },
+    "ollama": {
+      "baseURL": "http://127.0.0.1:11434/v1",
+      "models": {
+        "chat": "qwen2.5-coder:7b",
+        "completion": "qwen2.5-coder:7b",
+        "agent": "qwen2.5-coder:7b"
+      }
+    },
+    "volcengine": {
+      "baseURL": "https://ark.cn-beijing.volces.com/api/v3",
+      "models": {
+        "chat": "ep-xxxxxxxx",
+        "completion": "ep-xxxxxxxx",
+        "agent": "ep-xxxxxxxx"
+      }
+    }
+  }
+}

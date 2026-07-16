@@ -1,0 +1,114 @@
+{
+  "name": "openforge-vscode",
+  "displayName": "OpenForge",
+  "description": "OpenForge AI coding assistant for VS Code",
+  "version": "0.1.0",
+  "publisher": "openforge",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "activationEvents": [
+    "onCommand:openforge.openChat",
+    "onCommand:openforge.inlineEdit",
+    "onCommand:openforge.runAgent",
+    "onCommand:openforge.settings"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "openforge.openChat",
+        "title": "Open Chat",
+        "category": "OpenForge"
+      },
+      {
+        "command": "openforge.inlineEdit",
+        "title": "Inline Edit",
+        "category": "OpenForge"
+      },
+      {
+        "command": "openforge.runAgent",
+        "title": "Run Agent",
+        "category": "OpenForge"
+      },
+      {
+        "command": "openforge.settings",
+        "title": "Settings",
+        "category": "OpenForge"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "openforge",
+          "title": "OpenForge",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "openforge": [
+        {
+          "type": "webview",
+          "id": "openforge.chatView",
+          "name": "Chat"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "openforge.openChat",
+        "key": "ctrl+l",
+        "mac": "cmd+l",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "openforge.inlineEdit",
+        "key": "ctrl+k",
+        "mac": "cmd+k",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "openforge.runAgent",
+        "key": "ctrl+i",
+        "mac": "cmd+i",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "OpenForge",
+      "properties": {
+        "openforge.defaultProvider": {
+          "type": "string",
+          "enum": ["openai", "ollama", "volcengine"],
+          "default": "openai",
+          "description": "Default model provider"
+        },
+        "openforge.model": {
+          "type": "string",
+          "default": "",
+          "description": "Override model name (optional)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openforge/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.7.0"
+  }
+}

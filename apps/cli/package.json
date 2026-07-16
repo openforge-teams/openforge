@@ -1,0 +1,24 @@
+{
+  "name": "@openforge/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "OpenForge CLI — agent, plan, ask, and chat from the terminal",
+  "license": "MIT",
+  "bin": {
+    "openforge": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openforge/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

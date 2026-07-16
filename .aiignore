@@ -1,0 +1,14 @@
+node_modules
+dist
+target
+.git
+.cache
+coverage
+*.log
+*.db
+.env
+.env.*
+apps/desktop/src-tauri/target
+**/*.png
+**/*.ico
+**/*.icns
