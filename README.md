@@ -124,6 +124,27 @@ pnpm cli agent "给当前项目加一个 hello 接口"
 npx openforge ask "这个仓库的入口在哪？"
 ```
 
+### 打包桌面安装包（Tauri 2）
+
+```bash
+pnpm --filter @openforge/core build
+pnpm build:desktop
+```
+
+macOS 产物默认在：
+
+```text
+apps/desktop/src-tauri/target/release/bundle/macos/OpenForge.app
+```
+
+仅打 `.app`（跳过 DMG）：
+
+```bash
+cd apps/desktop && pnpm exec tauri build --bundles app
+```
+
+Windows / Linux 分别在对应系统执行同样命令，产物为 NSIS/MSI 或 Deb 等安装包。
+
 ### VS Code 扩展
 
 ```bash
