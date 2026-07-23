@@ -28,6 +28,12 @@
 
 ---
 
+## 界面预览
+
+![OpenForge Desktop IDE](docs/assets/screenshot.png)
+
+---
+
 ## 为什么是 OpenForge
 
 大多数 AI 编程工具要么锁在云端 IDE，要么只给一条 CLI。OpenForge 把二者合在一起：
